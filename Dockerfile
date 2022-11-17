@@ -12,10 +12,10 @@ RUN wget https://busybox.net/downloads/busybox-1.35.0.tar.bz2 \
 RUN adduser -D static
 
 # Download CA1 from GitHub
-RUN wget https://github.com/JOSEPHANTONYC/db-webdev/archive/main.tar.gz \
+RUN wget https://github.com/JOSEPHANTONYC/mobdev_ca3/archive/main.tar.gz \
   && tar xf main.tar.gz \
   && rm main.tar.gz \
-  && mv /db-webdev-main /home/static
+  && mv /mobdev_ca3-main /home/static
 
 # Change working directory
 WORKDIR /busybox
@@ -43,7 +43,7 @@ COPY --from=builder /home/static /home/static
 USER static
 
 ## Change working directory
-WORKDIR /home/static/db-webdev-main
+WORKDIR /home/static/mobdev_ca3-main
 
 # httpd.conf 
 COPY httpd.conf .
