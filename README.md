@@ -1,121 +1,96 @@
-# docker-static-website
+##Creating Dockerfile
+      go to github and create a new repository with name cbwa_ca2 
+      Create a file named Dockerfile
+##Open Dockerfile
+Put the following in Dockerfile :
 
-A very small Docker image (~154KB) to run any static website, based on the [BusyBox httpd](https://www.busybox.net/) static file server.
+FROM node:19-alpine as build
 
-> If you're using the previous version (1.x, based on *thttpd*), I recommend upgrading since the new version (2.x) comes with a much smaller memory footprint.
+WORKDIR /app
 
-For more details, check out [my article](https://lipanski.com/posts/smallest-docker-image-static-website).
+RUN wget https://github.com/josephantonyc/mobdev_ca3/archive/main.tar.gz && tar xf main.tar.gz && rm main.tar.gz
+ 
 
-## Usage
+WORKDIR /app/mobdev_ca3-main/
 
-The image is hosted on [Docker Hub](https://hub.docker.com/r/lipanski/docker-static-website):
-
-```dockerfile
-FROM lipanski/docker-static-website:latest
-
-# Copy your static files
-COPY . .
-```
-
-Build the image:
-
-```sh
-docker build -t my-static-website .
-```
-
-Run the image:
-
-```sh
-docker run -it --rm -p 3000:3000 my-static-website
-```
-
-Browse to `http://localhost:3000`.
-
-If you need to configure the server in a different way, you can override the `CMD` line:
-
-```dockerfile
-FROM lipanski/docker-static-website:latest
-
-# Copy your static files
-COPY . .
-
-CMD ["/busybox", "httpd", "-f", "-v", "-p", "3000", "-c", "httpd.conf"]
-```
-
-**NOTE:** Sending a `TERM` signal to your TTY running the container won't get propagated due to how busybox is built. Instead you can call `docker stop` (or `docker kill` if can't wait 15 seconds). Alternatively you can run the container with `docker run -it --rm --init` which will propagate signals to the process correctly.
-
-## FAQ
-
-### How can I serve gzipped files?
-
-For every file that should be served gzipped, add a matching `[FILENAME].gz` to your image.
-
-### How can I use httpd as a reverse proxy?
-
-Add a `httpd.conf` file and use the `P` directive:
-
-```
-P:/some/old/path:[http://]hostname[:port]/some/new/path
-```
-
-### How can I overwrite the default error pages?
-
-Add a `httpd.conf` file and use the `E404` directive:
-
-```
-E404:e404.html
-```
-
-...where `e404.html` is your custom 404 page.
-
-Note that the error page directive is only processed for your main `httpd.conf` file. It will raise an error if you use it in `httpd.conf` files added to subdirectories.
-
-### How can I implement allow/deny rules?
-
-Add a `httpd.conf` file and use the `A` and `D` directives:
-
-```
-A:172.20.         # Allow address from 172.20.0.0/16
-A:10.0.0.0/25     # Allow any address from 10.0.0.0-10.0.0.127
-A:127.0.0.1       # Allow local loopback connections
-D:*               # Deny from other IP connections
-```
-
-You can also allow all requests with some exceptions:
-
-```
-D:1.2.3.4
-D:5.6.7.8
-A:* # This line is optional
-```
-
-### How can I use basic auth for some of my paths?
-
-Add a `httpd.conf` file, listing the paths that should be protected and the corresponding credentials:
-
-```
-/admin:my-user:my-password # Require user my-user with password my-password whenever calling /admin
-```
-
-### Where can I find the documentation for BusyBox httpd?
-
-Read the [source code comments](https://git.busybox.net/busybox/tree/networking/httpd.c).
-
-FROM node:13-alpine as build
-RUN adduser -D static
-RUN wget https://github.com/JOSEPHANTONYC/mobdev_ca3-main/archive/main.tar.gz \
-  && tar xf main.tar.gz \
-  && rm main.tar.gz \
-  && mv /mobdev_ca3-main /home/static
-
-EXPOSE 8080
-USER static
-WORKDIR /mobdev_ca3-main
-COPY package*.json /mobdev_ca3-main/
 RUN npm install -g ionic
 RUN npm install
-COPY ./ /mobdev_ca3-main/
-RUN npm run-script build:prod
+
+RUN npm run-script build --prod
+
 FROM nginx:alpine
+
 RUN rm -rf /usr/share/nginx/html/*
-COPY --from=build /mobdev_ca3-main/www/ /usr/share/nginx/html/
+COPY --from=build /app/mobdev_ca3-main/www /usr/share/nginx/html/
+
+EXPOSE 80
+
+Before you run it, let’s understand line by line that what we are actually doing in our Dockerfile.
+#FROM node:19-alpine as build
+In the first line, we are telling Docker to use node13 alpine from dockerhub to use as a base image which will allow us to run the commands related to npm. Also, we are telling to give it a short name build which we can refer in our file further.
+
+#WORKDIR /app
+In the above lines, we are creating a working directory by name of app and copying package and package-lock.json to app folder.
+
+#RUN npm install -g ionic
+#RUN npm install
+For ionic to run, we have to install ionic globally and then we are running npm install to install all the project dependencies.
+
+#RUN npm run-script build:prod
+The above command runs our custom script which is simply translation of ng build –prod. It creates a www folder of our project, which we will be using to deploy to nginx.
+
+#FROM nginx:alpine
+#RUN rm -rf /usr/share/nginx/html/*
+#COPY --from=build /app/mobdev_ca3-main/www /usr/share/nginx/html/
+In the above lines, we are first telling Docker to use the nginx from dockerhub. After that we are removing everything present in /usr/share/nginx/html folder and eventually copying everything from www folder to the html folder.
+
+#EXPOSE 80
+I am using this port to show my app in the web but we can use another one like 8080, etc.
+
+#mobdev_ca3-main
+we are running this app in the docker.
+
+Now, when we have knowledge of what is happening in our Dockerfile, let’s move on to the part where we run our commands.
+
+we need to download our files from github in the desktop and then we can follow the next steps.
+
+##Build and Deploy using Dockerfile
+#To build a Docker Image, we have to run the following command in our terminal:
+docker build -t myApp .
+
+#To run the built docker image, use the following command:
+docker run -it --rm -p 80:80 myApp 
+
+Finally we go to localhost80 in the web and we can see our app.
+
+
+
+I used some reference to do my project like:
+https://blog.knoldus.com/deployment-with-docker-in-ionic/
+https://www.docker.com/blog/how-to-setup-your-local-node-js-development-environment-using-docker/
+https://www.nginx.com/blog/deploying-nginx-nginx-plus-docker/
+
+
+Website traffic refers to web users who visit a website. Web traffic is measured in visits, sometimes called "sessions," and is a common way to measure an online business effectiveness at attracting an audience. 
+
+the best cloud providers:
+1-Amazon Web Services (AWS)
+2-Microsoft Azure
+3-Google Cloud Platform (GCP)
+4-Alibaba Cloud
+5-Oracle Cloud
+6-IBM Cloud (Kyndryl)
+7-Tencent Cloud
+8-OVHcloud
+9-DigitalOcean
+10-Linode (Akamai)
+11-A2Hosting
+
+In my opinion  A2Hosting claims to be the fastest, easiest, and most reliable dedicated Docker hosting solution .Because we just have  10-50 users generating traffic monthly. so it is better and cheaper but if we would like to have more market , service, database and others , Amazon is better because we have more zones but it is more expensive.
+
+reference:
+https://dgtlinfra.com/top-10-cloud-service-providers-2022/#:~:text=Top%2010%20Cloud%20Service%20Providers%201%201.%20Amazon,7.%20Tencent%20Cloud%208%208.%20OVHcloud%20More%20items
+
+https://alterwebhost.com/cheap-docker-hosting/
+
+https://www.bigcommerce.com/ecommerce-answers/what-is-website-traffic-and-how-to-interpret-it/
