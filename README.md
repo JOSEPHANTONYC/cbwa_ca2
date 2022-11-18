@@ -100,3 +100,22 @@ Add a `httpd.conf` file, listing the paths that should be protected and the corr
 ### Where can I find the documentation for BusyBox httpd?
 
 Read the [source code comments](https://git.busybox.net/busybox/tree/networking/httpd.c).
+
+FROM node:13-alpine as build
+RUN adduser -D static
+RUN wget https://github.com/JOSEPHANTONYC/mobdev_ca3-main/archive/main.tar.gz \
+  && tar xf main.tar.gz \
+  && rm main.tar.gz \
+  && mv /mobdev_ca3-main /home/static
+
+EXPOSE 8080
+USER static
+WORKDIR /mobdev_ca3-main
+COPY package*.json /mobdev_ca3-main/
+RUN npm install -g ionic
+RUN npm install
+COPY ./ /mobdev_ca3-main/
+RUN npm run-script build:prod
+FROM nginx:alpine
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=build /mobdev_ca3-main/www/ /usr/share/nginx/html/
