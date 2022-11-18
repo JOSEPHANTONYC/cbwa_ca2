@@ -60,19 +60,28 @@
 #COPY . .
 #CMD [ "node", "server.js" ]
 
-FROM node:13-alpine as build
-RUN adduser -D static
-RUN wget https://github.com/JOSEPHANTONYC/mobdev_ca3
+FROM node as build
+#RUN adduser -D static
+WORKDIR /app
+RUN wget https://github.com/josephantonyc/mobdev_ca3/archive/main.tar.gz \
+  && tar xf main.tar.gz \
+ && rm main.tar.gz
+  #&& mv /mobdev_ca3-main /home/static
 
-EXPOSE 8080
-USER static
-WORKDIR /mobdev_ca3
-COPY package*.json /mobdev_ca3
+WORKDIR /app/mobdev_ca3-main/
+
+#COPY package*.json /app
 RUN npm install -g ionic
 RUN npm install
-COPY ./ /mobdev_ca3/
-RUN npm run-script build:prod
+#COPY ./ /app/
+RUN npm run-script build --prod
+
 FROM nginx:alpine
+
+
+EXPOSE 8080
+#USER static
+
 RUN rm -rf /usr/share/nginx/html/*
-COPY --from=build /mobdev_ca3-main/www/ /usr/share/nginx/html/
+COPY --from=build /app/mobdev_ca3-main/www /usr/share/nginx/html/
 
