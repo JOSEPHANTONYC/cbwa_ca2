@@ -1,5 +1,6 @@
 FROM alpine:latest AS builder
 
+
 # Install all dependencies required for compiling busybox
 RUN apk add gcc musl-dev make perl
 
@@ -50,3 +51,24 @@ COPY httpd.conf .
 
 # Issuing commands to run when container is created
 CMD ["/busybox", "httpd", "-f", "-v", "-p", "8080", "-c", "httpd.conf"]
+
+#FROM node:18.7.0
+#WORKDIR /home/static/mobdev_ca3-main
+#COPY package.json package.json
+#COPY package-lock.json package-lock.json
+#RUN npm install
+#COPY . .
+#CMD [ "node", "server.js" ]
+
+FROM node:13-alpine as build
+WORKDIR /home/static/mobdev_ca3-main
+COPY package.json package.json
+COPY package-lock.json package-lock.json
+RUN npm install -g ionic
+RUN npm install
+COPY ./ /home/static/mobdev_ca3-main
+RUN npm run-script build:prod
+FROM nginx:alpine
+RUN rm -rf /usr/share/nginx/html/*
+COPY --from=build /home/static/mobdev_ca3-main/www/ /usr/share/nginx/html/
+
