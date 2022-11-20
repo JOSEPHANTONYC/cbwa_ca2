@@ -27,7 +27,7 @@ EXPOSE 80
 
 Before you run it, let’s understand line by line that what we are actually doing in our Dockerfile.
 #FROM node:19-alpine as build
-In the first line, we are telling Docker to use node13 alpine from dockerhub to use as a base image which will allow us to run the commands related to npm. Also, we are telling to give it a short name build which we can refer in our file further.
+In the first line, we are telling Docker to use node19 alpine from dockerhub to use as a base image which will allow us to run the commands related to npm. Also, we are telling to give it a short name build which we can refer in our file further.
 
 #WORKDIR /app
 In the above lines, we are creating a working directory by name of app and copying package and package-lock.json to app folder.
@@ -56,10 +56,10 @@ we need to download our files from github in the desktop and then we can follow 
 
 ##Build and Deploy using Dockerfile
 #To build a Docker Image, we have to run the following command in our terminal:
-docker build -t myApp .
+docker build -t myapp .
 
 #To run the built docker image, use the following command:
-docker run -it --rm -p 80:80 myApp 
+docker run -it --rm -p 80:80 myapp 
 
 Finally we go to localhost80 in the web and we can see our app.
 
